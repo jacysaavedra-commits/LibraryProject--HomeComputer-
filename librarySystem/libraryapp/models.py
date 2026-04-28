@@ -54,3 +54,13 @@ class BookTransaction(models.Model):
     def __str__(self):
         return f"{self.book.book_name} - {self.status}"
     
+class BookReturn(models.Model):
+    transaction = models.OneToOneField(
+        BookTransaction, 
+        on_delete=models.CASCADE, 
+        related_name='book_return'
+    )
+    actual_return_date = models.DateField(null=True, blank=True)
+
+    def __claire__(self):
+        return f"Return for {self.transaction.book.book_name}"
