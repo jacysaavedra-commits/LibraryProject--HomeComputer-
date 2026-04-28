@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils import timezone
+from datetime import timedelta
 # username/password for superuser - (jacygravy27,jacy2705)
 # Create your models here.
 
@@ -50,6 +51,12 @@ class BookTransaction(models.Model):
     issue_date = models.DateField(null=True, blank=True)
     return_date = models.DateField(null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='registered')
+
+    def save(self, *args, **kwargs):
+        # Automatically set return_date to 2 weeks from issue_date if issue_date is set
+        if self.issue_date and not self.return_date:
+            self.return_date = self.issue_date + timedelta(days=14)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.book.book_name} - {self.status}"
