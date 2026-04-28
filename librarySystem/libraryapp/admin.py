@@ -3,10 +3,10 @@ from .models import Book, Genre, Customer, BookTransaction, BookReturn
 
 # Register your models here.
 
-admin.site.register(Book)
-admin.site.register(Genre)
-admin.site.register(Customer)
-admin.site.register(BookReturn)
+
+class BookAdmin(admin.ModelAdmin):
+    fields = ['book_name', 'book_author', 'genre', 'amount_of_copies']
+    list_display = ['book_name', 'book_author', 'genre', 'amount_of_copies']
 
 
 class BookTransactionAdmin(admin.ModelAdmin):
@@ -15,4 +15,8 @@ class BookTransactionAdmin(admin.ModelAdmin):
     list_display = ['book', 'customer', 'issue_date', 'return_date', 'status']
 
 
+admin.site.register(Book, BookAdmin)
+admin.site.register(Genre)
+admin.site.register(Customer)
+admin.site.register(BookReturn)
 admin.site.register(BookTransaction, BookTransactionAdmin)
