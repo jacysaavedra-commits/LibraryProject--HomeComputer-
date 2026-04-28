@@ -64,4 +64,4 @@ class BookReturn(models.Model):
 
     def __claire__(self):
         return f"Return for {self.transaction.book.book_name}"
-    def clean(self):
+    
