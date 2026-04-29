@@ -118,10 +118,22 @@ class BookReturn(models.Model):
     is_late = models.BooleanField(default=False)
     late_fee = models.DecimalField(max_digits=6, decimal_places=2, default=Decimal('0.00'))
 
+    def clean(self):
+        errors = {}
+
+        if self.transaction and self.transaction.status != 'issued':
+            errors['transaction'] = ValidationError('Can only return books that have been issued.')
+
+        if self.actual_return_date and self.transaction and self.transaction.issue_date:
+            if self.actual_return_date < self.transaction.issue_date:
+                errors['actual_return_date'] = ValidationError('Actual return date cannot be before issue date.')
+
+        if errors:
+            raise ValidationError(errors)
+
     def save(self, *args, **kwargs):
-        if self.transaction.status != 'issued':
-            raise ValidationError('Can only return books that have been issued.')
-        
+        self.full_clean()
+
         if self.actual_return_date and self.transaction.return_date:
             if self.actual_return_date > self.transaction.return_date:
                 self.is_late = True
@@ -133,11 +145,7 @@ class BookReturn(models.Model):
         else:
             self.is_late = False
             self.late_fee = Decimal('0.00')
-        
-        if self.actual_return_date and self.transaction.issue_date:
-            if self.actual_return_date < self.transaction.issue_date:
-                raise ValidationError('Actual return date cannot be before issue date.')
-        
+
         super().save(*args, **kwargs)
 
     def __str__(self):
