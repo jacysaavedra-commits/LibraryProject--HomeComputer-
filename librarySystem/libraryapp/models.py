@@ -119,6 +119,9 @@ class BookReturn(models.Model):
     late_fee = models.DecimalField(max_digits=6, decimal_places=2, default=Decimal('0.00'))
 
     def save(self, *args, **kwargs):
+        if self.transaction.status != 'issued':
+            raise ValidationError('Can only return books that have been issued.')
+        
         if self.actual_return_date and self.transaction.return_date:
             if self.actual_return_date > self.transaction.return_date:
                 self.is_late = True

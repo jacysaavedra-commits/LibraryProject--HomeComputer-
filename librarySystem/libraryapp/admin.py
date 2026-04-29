@@ -20,6 +20,15 @@ class BookReturnAdmin(admin.ModelAdmin):
     readonly_fields = ['is_late', 'late_fee', 'transaction_info']
     list_display = ['get_transaction_display', 'actual_return_date', 'is_late', 'late_fee']
     
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs
+    
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'transaction':
+            kwargs['queryset'] = BookTransaction.objects.filter(status='issued')
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+    
     def transaction_info(self, obj):
         if obj.transaction:
             return f"{obj.transaction.book.book_name} - {obj.transaction.customer.first_name} {obj.transaction.customer.last_name} - Issued: {obj.transaction.issue_date}"
