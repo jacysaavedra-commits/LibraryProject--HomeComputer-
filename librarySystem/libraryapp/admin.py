@@ -15,8 +15,26 @@ class BookTransactionAdmin(admin.ModelAdmin):
     list_display = ['book', 'customer', 'issue_date', 'return_date', 'status']
 
 
+class BookReturnAdmin(admin.ModelAdmin):
+    fields = ['transaction', 'actual_return_date', 'is_late', 'late_fee']
+    readonly_fields = ['is_late', 'late_fee', 'transaction_info']
+    list_display = ['get_transaction_display', 'actual_return_date', 'is_late', 'late_fee']
+    
+    def transaction_info(self, obj):
+        if obj.transaction:
+            return f"{obj.transaction.book.book_name} - {obj.transaction.customer.first_name} {obj.transaction.customer.last_name} - Issued: {obj.transaction.issue_date}"
+        return "N/A"
+    transaction_info.short_description = "Transaction Details"
+    
+    def get_transaction_display(self, obj):
+        if obj.transaction:
+            return f"{obj.transaction.book.book_name} ({obj.transaction.customer.first_name} - {obj.transaction.issue_date})"
+        return "N/A"
+    get_transaction_display.short_description = "Book Issued To (Issue Date)"
+
+
 admin.site.register(Book, BookAdmin)
 admin.site.register(Genre)
 admin.site.register(Customer)
-admin.site.register(BookReturn)
+admin.site.register(BookReturn, BookReturnAdmin)
 admin.site.register(BookTransaction, BookTransactionAdmin)

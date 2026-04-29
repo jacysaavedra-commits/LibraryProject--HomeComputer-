@@ -2,6 +2,7 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from datetime import timedelta
+from decimal import Decimal
 # username/password for superuser - (jacygravy27,jacy2705)
 # Create your models here.
 
@@ -52,6 +53,9 @@ class BookTransaction(models.Model):
     def save(self, *args, **kwargs):
         if self.issue_date and not self.return_date:
             self.return_date = self.issue_date + timedelta(days=14)
+        
+        if self.issue_date and self.return_date and self.return_date < self.issue_date:
+            raise ValidationError('Return date cannot be before issue date.')
 
         old_transaction = None
         if self.pk:
@@ -111,7 +115,28 @@ class BookReturn(models.Model):
         related_name='book_return'
     )
     actual_return_date = models.DateField(null=True, blank=True)
+    is_late = models.BooleanField(default=False)
+    late_fee = models.DecimalField(max_digits=6, decimal_places=2, default=Decimal('0.00'))
 
-    def __claire__(self):
+    def save(self, *args, **kwargs):
+        if self.actual_return_date and self.transaction.return_date:
+            if self.actual_return_date > self.transaction.return_date:
+                self.is_late = True
+                days_late = (self.actual_return_date - self.transaction.return_date).days
+                self.late_fee = Decimal(str(days_late * 5))
+            else:
+                self.is_late = False
+                self.late_fee = Decimal('0.00')
+        else:
+            self.is_late = False
+            self.late_fee = Decimal('0.00')
+        
+        if self.actual_return_date and self.transaction.issue_date:
+            if self.actual_return_date < self.transaction.issue_date:
+                raise ValidationError('Actual return date cannot be before issue date.')
+        
+        super().save(*args, **kwargs)
+
+    def __str__(self):
         return f"Return for {self.transaction.book.book_name}"
     
