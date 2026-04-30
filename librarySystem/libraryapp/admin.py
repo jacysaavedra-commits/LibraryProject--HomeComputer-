@@ -22,7 +22,7 @@ class BookReturnAdmin(admin.ModelAdmin):
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == 'transaction':
-            kwargs['queryset'] = BookTransaction.objects.filter(status='issued')
+            kwargs['queryset'] = BookTransaction.objects.filter(issue_date__isnull=False, book_return__isnull=True)
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def late_status(self, obj):

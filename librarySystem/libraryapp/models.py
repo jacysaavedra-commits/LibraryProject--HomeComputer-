@@ -37,30 +37,20 @@ class Book(models.Model): # Creates a model named Book made for holding book inf
         return f"{self.book_name} by {self.book_author}"
 
 class BookTransaction(models.Model):
-    STATUS_CHOICES = [
-        ('registered', 'Registered/Available'),
-        ('issued', 'Issued'),
-        ('returned', 'Returned'),
-    ]
-
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, null=True, blank=True)
     book = models.ForeignKey(Book, on_delete=models.CASCADE)
     issue_date = models.DateField(null=True, blank=True)
     return_date = models.DateField(null=True, blank=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='registered')
 
     def _set_default_return_date(self):
         if self.issue_date and not self.return_date:
             self.return_date = self.issue_date + timedelta(days=14)
 
-    def _normalize_status(self):
-        if self.status == 'returned':
-            return
-        self.status = 'issued' if self.issue_date else 'registered'
-
     @property
     def is_issued(self):
-        return self.status == 'issued'
+        if not self.issue_date:
+            return False
+        return not BookReturn.objects.filter(transaction=self).exists()
 
     @property
     def label(self):
@@ -72,7 +62,8 @@ class BookTransaction(models.Model):
         return BookTransaction.objects.filter(pk=self.pk).first() if self.pk else None
 
     def _update_book_stock(self, old_transaction):
-        old_issued = bool(old_transaction and old_transaction.is_issued)
+        old_returned = BookReturn.objects.filter(transaction=old_transaction).exists() if old_transaction else False
+        old_issued = bool(old_transaction and old_transaction.issue_date and not old_returned)
         new_issued = self.is_issued
         old_book = old_transaction.book if old_transaction else None
 
@@ -95,7 +86,6 @@ class BookTransaction(models.Model):
 
     def save(self):
         self._set_default_return_date()
-        self._normalize_status()
         self.clean()
 
         old_transaction = self._get_old_transaction()
@@ -124,7 +114,7 @@ class BookReturn(models.Model):
     late_fee = models.DecimalField(max_digits=6, decimal_places=2, default=Decimal('0.00'))
 
     def _validate_transaction(self):
-        if self.transaction and self.transaction.status != 'issued':
+        if self.transaction and not self.transaction.issue_date:
             raise ValidationError({'transaction': 'Can only return books that have been issued.'})
 
     def _validate_dates(self):
@@ -146,11 +136,12 @@ class BookReturn(models.Model):
         self._validate_dates()
 
     def save(self):
+        is_new_return = self._state.adding
         self.full_clean()
         self._update_late_fee()
-        if self.transaction:
-            self.transaction.status = 'returned'
-            self.transaction.save()
+        if is_new_return and self.transaction and self.transaction.book:
+            self.transaction.book.amount_of_copies = max(self.transaction.book.amount_of_copies + 1, 0)
+            self.transaction.book.save()
         super().save()
 
     def __str__(self):
