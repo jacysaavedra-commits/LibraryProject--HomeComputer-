@@ -17,7 +17,7 @@ class Genre(models.Model): # Creates a model named Genre made for holding genre 
     genre_name = models.CharField(max_length=30) # Creates a charfield for strings of text with a max character length of 30 for genre names
 
     def __str__(self): # Displays the genre inputted as a string 
-        return self.genre_name # Makes whatever is inputted as genre name as a string when printed
+        return self.genre_name # Makes whatever is inputted as genre name as a string 
     
 class Book(models.Model): # Creates a model named Book made for holding book information
     
@@ -28,13 +28,13 @@ class Book(models.Model): # Creates a model named Book made for holding book inf
     genre = models.ForeignKey(Genre, on_delete=models.CASCADE, null=True, blank=True) # Creates a Many-to-one relationship by linking to the genre model, also makes it so that if a genre were deleted it would delete all books associated with that genre and allows for the genre to have a empty value 
     amount_of_copies = models.PositiveIntegerField(default=1) # Makes a positive integer field so you cant input a negative amount of copies for books, and it sets the default copy of bboks to 1
 
-    def save(self):
-        if self.amount_of_copies < 0:
-            self.amount_of_copies = 0
-        super().save()
+    def save(self): # This overrides the built in Django save method so that in Book model when you save a book the code below happens
+        if self.amount_of_copies < 0: # Checks if the amount of copies is less than 0
+            self.amount_of_copies = 0 # if the amount of copies is set as a negative number it will automatically set to 0
+        super().save() # Makes the save 
 
-    def __str__(self):
-        return f"{self.book_name} by {self.book_author}"
+    def __str__(self): # Displays the book name and author as a string 
+        return f"{self.book_name} by {self.book_author}" # Makes whatever is inputted as book name and author as a string 
 
 class BookTransaction(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, null=True, blank=True)
