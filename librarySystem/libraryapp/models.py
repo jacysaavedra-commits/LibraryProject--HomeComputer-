@@ -28,17 +28,10 @@ class Book(models.Model): # Creates a model named Book made for holding book inf
     genre = models.ForeignKey(Genre, on_delete=models.CASCADE, null=True, blank=True) # Creates a Many-to-one relationship by linking to the genre model, also makes it so that if a genre were deleted it would delete all books associated with that genre and allows for the genre to have a empty value 
     amount_of_copies = models.PositiveIntegerField(default=1) # Makes a positive integer field so you cant input a negative amount of copies for books, and it sets the default copy of bboks to 1
 
-<<<<<<< HEAD
     def save(self): # This overrides the built in Django save method so that in Book model when you save a book the code below happens
         if self.amount_of_copies < 0: # Checks if the amount of copies is less than 0
             self.amount_of_copies = 0 # if the amount of copies is set as a negative number it will automatically set to 0
         super().save() # Makes the save 
-=======
-    def save(self): # 
-        if self.amount_of_copies < 0:
-            self.amount_of_copies = 0
-        super().save()
->>>>>>> f6e246834c098d89d8c7a1b55c3669a99429e0b6
 
     def __str__(self): # Displays the book name and author as a string 
         return f"{self.book_name} by {self.book_author}" # Makes whatever is inputted as book name and author as a string 
