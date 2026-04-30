@@ -54,12 +54,12 @@ class BookTransaction(models.Model): # Creates a model named BookTransaction mad
 
     @property # This allows you to have accessible functions that dont require brackets () to call them
     def label(self): # This creates a function for displaying the book transaction information in a specific format
-        customer_name = str(self.customer) if self.customer else 'Unknown customer'
-        issue_date = self.issue_date.isoformat() if self.issue_date else 'no issue date'
-        return f"{self.book.book_name} - {customer_name} - {issue_date}"
+        customer_name = str(self.customer) if self.customer else 'Unknown customer' # this will print the customer name if there is a customer associated with the transaction but if there isn't it will state unknown customer instead
+        issue_date = self.issue_date.isoformat() if self.issue_date else 'no issue date' # This checks if there is an issue date and if there isn't then it will state that there is no issue date
+        return f"{self.book.book_name} - {customer_name} - {issue_date}" # This will display the book name, customer name and the issue date in a nice line (show in admin panel)
 
-    def _get_old_transaction(self):
-        return BookTransaction.objects.filter(pk=self.pk).first() if self.pk else None
+    def _get_old_transaction(self): # This function is for getting any old transaction information before saved 
+        return BookTransaction.objects.filter(pk=self.pk).first() if self.pk else None # It checks if there is an issue record with the same primary key if there isn't then it the program will return none but if there is a record then it will compare the old transaction with the new transaction to see if there are any changes that need to be made to the book stock
 
     def _update_book_stock(self, old_transaction):
         old_returned = BookReturn.objects.filter(transaction=old_transaction).exists() if old_transaction else False
@@ -99,8 +99,8 @@ class BookTransaction(models.Model): # Creates a model named BookTransaction mad
             self.book.save()
         super().delete()
 
-    def __str__(self):
-        return self.label
+    def __str__(self): # This will help to display the book name, customer name and the issue date in a nice line (show in admin panel)
+        return self.label # This will display the book name, customer name and the issue date in a nice line (show in admin panel)
 
 
 class BookReturn(models.Model):
