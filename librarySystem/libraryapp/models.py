@@ -17,7 +17,7 @@ class Genre(models.Model): # Creates a model named Genre made for holding genre 
     genre_name = models.CharField(max_length=30) # Creates a charfield for strings of text with a max character length of 30 for genre names
 
     def __str__(self): # Displays the genre inputted as a string 
-        return self.genre_name # Makes whatever is inputted as genre name as a string when printed
+        return self.genre_name # Makes whatever is inputted as genre name as a string 
     
 class Book(models.Model): # Creates a model named Book made for holding book information
     
@@ -28,32 +28,32 @@ class Book(models.Model): # Creates a model named Book made for holding book inf
     genre = models.ForeignKey(Genre, on_delete=models.CASCADE, null=True, blank=True) # Creates a Many-to-one relationship by linking to the genre model, also makes it so that if a genre were deleted it would delete all books associated with that genre and allows for the genre to have a empty value 
     amount_of_copies = models.PositiveIntegerField(default=1) # Makes a positive integer field so you cant input a negative amount of copies for books, and it sets the default copy of bboks to 1
 
-    def save(self): # 
-        if self.amount_of_copies < 0:
-            self.amount_of_copies = 0
-        super().save()
+    def save(self): # This overrides the built in Django save method so that in Book model when you save a book the code below happens
+        if self.amount_of_copies < 0: # Checks if the amount of copies is less than 0
+            self.amount_of_copies = 0 # if the amount of copies is set as a negative number it will automatically set to 0
+        super().save() # Saves all the changes saved to the book model in the database
 
-    def __str__(self):
-        return f"{self.book_name} by {self.book_author}"
+    def __str__(self): # Displays the book name and author as a string 
+        return f"{self.book_name} by {self.book_author}" # Makes whatever is inputted as book name and author as a string 
 
-class BookTransaction(models.Model):
-    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, null=True, blank=True)
-    book = models.ForeignKey(Book, on_delete=models.CASCADE)
-    issue_date = models.DateField(null=True, blank=True)
-    return_date = models.DateField(null=True, blank=True)
+class BookTransaction(models.Model): # Creates a model named BookTransaction made for holding book transaction information
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, null=True, blank=True) # Creates a Many-to-one relationship with the customer model and all makes it so that when a customer is deleted their transaction history is also deleted
+    book = models.ForeignKey(Book, on_delete=models.CASCADE) # Creates a Many-to-one relationship with the book model and makes it so that when a book is deleted all transactions associated with that book are also deleted
+    issue_date = models.DateField(null=True, blank=True) #Creates a datefield so you can choose when the book was issued out
+    return_date = models.DateField(null=True, blank=True) # Creates a datefield for when customer returns their book
 
-    def _set_default_return_date(self):
-        if self.issue_date and not self.return_date:
-            self.return_date = self.issue_date + timedelta(days=14)
+    def _set_default_return_date(self): # This creates a defined function for setting the return date automatically
+        if self.issue_date and not self.return_date: # If there is an issue date but no return date the following code will run
+            self.return_date = self.issue_date + timedelta(days=14) # This will automatically set the return date to 14 days after the issue date
 
-    @property
-    def is_issued(self):
-        if not self.issue_date:
-            return False
-        return not BookReturn.objects.filter(transaction=self).exists()
+    @property # Allows you to have accessible functions that dont require brackets () to call them 
+    def is_issued(self): # this creates a Funciion for checking if a books is issued out
+        if not self.issue_date: # If the issue date is empty then the following code will run
+            return False # Tells the program that a book isn't issued out when there's no issue date
+        return not BookReturn.objects.filter(transaction=self).exists() # This checks in the BookReturn model meaning if a similar book was returned then it would return false but if it wasn't returned it would return true meaning the book is still issued out
 
-    @property
-    def label(self):
+    @property # This allows you to have accessible functions that dont require brackets () to call them
+    def label(self): # This creates a function for displaying the book transaction information in a specific format
         customer_name = str(self.customer) if self.customer else 'Unknown customer'
         issue_date = self.issue_date.isoformat() if self.issue_date else 'no issue date'
         return f"{self.book.book_name} - {customer_name} - {issue_date}"
