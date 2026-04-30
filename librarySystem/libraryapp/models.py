@@ -5,33 +5,33 @@ from decimal import Decimal
 # username/password for superuser - (jacygravy27,jacy2705)
 # Create your models here.
 
-class Customer(models.Model):
-    student_id = models.AutoField(primary_key=True) # 
-    first_name = models.CharField(max_length=30) # 
-    last_name = models.CharField(max_length=30)
+class Customer(models.Model): # Creates a model named Customer made for holding customer information
+    student_id = models.AutoField(primary_key=True) # Creates an automatic gives a unique id for each customer 
+    first_name = models.CharField(max_length=30) # Creates a charfield for strings of text with a max character length of 30 for first names
+    last_name = models.CharField(max_length=30) # Creates a charfield for strings of text with a max character length of 30 for last names
 
-    def __str__(self):
-        return f"{self.first_name} {self.last_name}"
+    def __str__(self): # Makes it so that it displays first and last name as a string instead of the default object name when printed
+        return f"{self.first_name} {self.last_name}" # Makes whatever is inputted as first and last name as a string 
     
-class Genre(models.Model):
-    genre_name = models.CharField(max_length=30)
+class Genre(models.Model): # Creates a model named Genre made for holding genre information
+    genre_name = models.CharField(max_length=30) # Creates a charfield for strings of text with a max character length of 30 for genre names
 
-    def __str__(self):
-        return self.genre_name
+    def __str__(self): # Displays the genre inputted as a string 
+        return self.genre_name # Makes whatever is inputted as genre name as a string when printed
     
-class Book(models.Model):
+class Book(models.Model): # Creates a model named Book made for holding book information
     
-    book_id = models.AutoField(primary_key=True)
-    book_name = models.CharField(max_length=30)
-    book_author = models.CharField(max_length=30)
+    book_id = models.AutoField(primary_key=True) # Creates an automatic gives a unique id for each book
+    book_name = models.CharField(max_length=30) # Creates a charfield for strings of text with a max character length of 30 for book names
+    book_author = models.CharField(max_length=30) # Creates a charfield for strings of text with a max character length of 30 for book authors
     
-    genre = models.ForeignKey(Genre, on_delete=models.CASCADE, null=True, blank=True)
-    amount_of_copies = models.PositiveIntegerField(default=1)
+    genre = models.ForeignKey(Genre, on_delete=models.CASCADE, null=True, blank=True) # Creates a Many-to-one relationship by linking to the genre model, also makes it so that if a genre were deleted it would delete all books associated with that genre and allows for the genre to have a empty value 
+    amount_of_copies = models.PositiveIntegerField(default=1) # Makes a positive integer field so you cant input a negative amount of copies for books, and it sets the default copy of bboks to 1
 
-    def save(self, *args, **kwargs):
+    def save(self):
         if self.amount_of_copies < 0:
             self.amount_of_copies = 0
-        super().save(*args, **kwargs)
+        super().save()
 
     def __str__(self):
         return f"{self.book_name} by {self.book_author}"
@@ -93,7 +93,7 @@ class BookTransaction(models.Model):
         if self.issue_date and self.return_date and self.return_date < self.issue_date:
             raise ValidationError('Return date cannot be before issue date.')
 
-    def save(self, *args, **kwargs):
+    def save(self):
         self._set_default_return_date()
         self._normalize_status()
         self.clean()
@@ -101,13 +101,13 @@ class BookTransaction(models.Model):
         old_transaction = self._get_old_transaction()
         self._update_book_stock(old_transaction)
 
-        super().save(*args, **kwargs)
+        super().save()
 
-    def delete(self, *args, **kwargs):
+    def delete(self):
         if self.is_issued:
             self.book.amount_of_copies = max(self.book.amount_of_copies + 1, 0)
             self.book.save()
-        super().delete(*args, **kwargs)
+        super().delete()
 
     def __str__(self):
         return self.label
@@ -145,13 +145,13 @@ class BookReturn(models.Model):
         self._validate_transaction()
         self._validate_dates()
 
-    def save(self, *args, **kwargs):
+    def save(self):
         self.full_clean()
         self._update_late_fee()
         if self.transaction:
             self.transaction.status = 'returned'
             self.transaction.save()
-        super().save(*args, **kwargs)
+        super().save()
 
     def __str__(self):
         return f"Return for {self.transaction.book.book_name}"
