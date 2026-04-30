@@ -10,25 +10,25 @@ class BookAdmin(admin.ModelAdmin):
 
 
 class BookTransactionAdmin(admin.ModelAdmin):
-    fields = ['customer', 'book', 'issue_date', 'return_date', 'status']
+    fields = ['customer', 'book', 'issue_date', 'return_date']
     readonly_fields = ['return_date']
-    list_display = ['book', 'customer', 'issue_date', 'return_date', 'status']
+    list_display = ['book', 'customer', 'issue_date', 'return_date']
 
 
 class BookReturnAdmin(admin.ModelAdmin):
-    fields = ['transaction', 'actual_return_date', 'is_late', 'late_fee']
-    readonly_fields = ['is_late', 'late_fee', 'transaction_info']
-    list_display = ['get_transaction_display', 'actual_return_date', 'is_late', 'late_fee']
-    
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        return qs
+    fields = ['transaction', 'actual_return_date', 'late_status', 'late_fee', 'transaction_info']
+    readonly_fields = ['late_status', 'late_fee', 'transaction_info']
+    list_display = ['get_transaction_display', 'actual_return_date', 'late_status', 'late_fee']
     
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == 'transaction':
             kwargs['queryset'] = BookTransaction.objects.filter(status='issued')
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
     
+    def late_status(self, obj):
+        return 'Yes' if obj.is_late else 'No'
+    late_status.short_description = 'Late?'
+
     def transaction_info(self, obj):
         if obj.transaction:
             return f"{obj.transaction.book.book_name} - {obj.transaction.customer.first_name} {obj.transaction.customer.last_name} - Issued: {obj.transaction.issue_date}"
@@ -37,7 +37,7 @@ class BookReturnAdmin(admin.ModelAdmin):
     
     def get_transaction_display(self, obj):
         if obj.transaction:
-            return f"{obj.transaction.book.book_name} ({obj.transaction.customer.first_name} - {obj.transaction.issue_date})"
+            return f"{obj.transaction.book.book_name} - {obj.transaction.customer.first_name} {obj.transaction.customer.last_name} - {obj.transaction.issue_date}"
         return "N/A"
     get_transaction_display.short_description = "Book Issued To (Issue Date)"
 

@@ -7,7 +7,7 @@ from decimal import Decimal
 # Create your models here.
 
 class Customer(models.Model):
-    student_id = models.AutoField(primary_key=True) #
+    student_id = models.AutoField(primary_key=True) # 
     first_name = models.CharField(max_length=30) # 
     last_name = models.CharField(max_length=30)
 
@@ -53,6 +53,11 @@ class BookTransaction(models.Model):
     def save(self, *args, **kwargs):
         if self.issue_date and not self.return_date:
             self.return_date = self.issue_date + timedelta(days=14)
+
+        if self.issue_date and self.status != 'returned':
+            self.status = 'issued'
+        elif not self.issue_date and self.status != 'returned':
+            self.status = 'registered'
         
         if self.issue_date and self.return_date and self.return_date < self.issue_date:
             raise ValidationError('Return date cannot be before issue date.')
@@ -106,7 +111,9 @@ class BookTransaction(models.Model):
         super().delete(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.book.book_name} - {self.status}"
+        customer_name = str(self.customer) if self.customer else 'Unknown customer'
+        issue_date = self.issue_date.isoformat() if self.issue_date else 'no issue date'
+        return f"{self.book.book_name} - {customer_name} - {issue_date}"
     
 class BookReturn(models.Model):
     transaction = models.OneToOneField(
@@ -145,6 +152,10 @@ class BookReturn(models.Model):
         else:
             self.is_late = False
             self.late_fee = Decimal('0.00')
+
+        if self.transaction:
+            self.transaction.status = 'returned'
+            self.transaction.save()
 
         super().save(*args, **kwargs)
 
