@@ -37,7 +37,14 @@ class Book(models.Model): # Creates a model named Book made for holding book inf
         return f"{self.book_name} by {self.book_author}"
 
 class BookTransaction(models.Model):
-    
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, null=True, blank=True)
+    book = models.ForeignKey(Book, on_delete=models.CASCADE)
+    issue_date = models.DateField(null=True, blank=True)
+    return_date = models.DateField(null=True, blank=True)
+
+    def _set_default_return_date(self):
+        if self.issue_date and not self.return_date:
+            self.return_date = self.issue_date + timedelta(days=14)
 
     @property
     def is_issued(self):
