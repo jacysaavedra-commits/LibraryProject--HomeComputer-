@@ -16,30 +16,26 @@ class BookTransactionAdmin(admin.ModelAdmin):
 
 
 class BookReturnAdmin(admin.ModelAdmin):
-    fields = ['transaction', 'actual_return_date', 'late_status', 'late_fee', 'transaction_info']
-    readonly_fields = ['late_status', 'late_fee', 'transaction_info']
-    list_display = ['get_transaction_display', 'actual_return_date', 'late_status', 'late_fee']
-    
+    fields = ['transaction', 'actual_return_date', 'late_status', 'late_fee', 'transaction_description']
+    readonly_fields = ['late_status', 'late_fee', 'transaction_description']
+    list_display = ['transaction_description', 'actual_return_date', 'late_status', 'late_fee']
+
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == 'transaction':
             kwargs['queryset'] = BookTransaction.objects.filter(status='issued')
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
-    
+
     def late_status(self, obj):
         return 'Yes' if obj.is_late else 'No'
     late_status.short_description = 'Late?'
 
-    def transaction_info(self, obj):
-        if obj.transaction:
-            return f"{obj.transaction.book.book_name} - {obj.transaction.customer.first_name} {obj.transaction.customer.last_name} - Issued: {obj.transaction.issue_date}"
-        return "N/A"
-    transaction_info.short_description = "Transaction Details"
-    
-    def get_transaction_display(self, obj):
-        if obj.transaction:
-            return f"{obj.transaction.book.book_name} - {obj.transaction.customer.first_name} {obj.transaction.customer.last_name} - {obj.transaction.issue_date}"
-        return "N/A"
-    get_transaction_display.short_description = "Book Issued To (Issue Date)"
+    def transaction_description(self, obj):
+        if not obj.transaction:
+            return 'N/A'
+        transaction = obj.transaction
+        customer_name = str(transaction.customer) if transaction.customer else 'Unknown customer'
+        return f"{transaction.book.book_name} - {customer_name} - {transaction.issue_date}"
+    transaction_description.short_description = 'Issued Book (Customer - Issue Date)'
 
 
 admin.site.register(Book, BookAdmin)
