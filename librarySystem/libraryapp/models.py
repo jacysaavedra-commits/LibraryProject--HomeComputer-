@@ -28,7 +28,7 @@ class Book(models.Model): # Creates a model named Book made for holding book inf
     genre = models.ForeignKey(Genre, on_delete=models.CASCADE, null=True, blank=True) # Creates a Many-to-one relationship by linking to the genre model, also makes it so that if a genre were deleted it would delete all books associated with that genre and allows for the genre to have a empty value 
     amount_of_copies = models.PositiveIntegerField(default=1) # Makes a positive integer field so you cant input a negative amount of copies for books, and it sets the default copy of bboks to 1
 
-    def save(self):
+    def save(self): # 
         if self.amount_of_copies < 0:
             self.amount_of_copies = 0
         super().save()
