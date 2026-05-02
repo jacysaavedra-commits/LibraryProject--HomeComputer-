@@ -1,18 +1,18 @@
-from django.contrib import admin
-from .models import Book, Genre, Customer, BookTransaction, BookReturn
+from django.contrib import admin  # import Django admin site helpers
+from .models import Book, Genre, Customer, BookTransaction, BookReturn  # import models to register and customize in admin
 
 # Register your models here.
 
 
 class BookAdmin(admin.ModelAdmin):
-    fields = ['book_name', 'book_author', 'genre', 'amount_of_copies']
-    list_display = ['book_name', 'book_author', 'genre', 'amount_of_copies']
+    fields = ['book_name', 'book_author', 'genre', 'amount_of_copies']  # fields shown in the book edit page
+    list_display = ['book_name', 'book_author', 'genre', 'amount_of_copies']  # fields shown in the book admin list view
 
 
 class BookTransactionAdmin(admin.ModelAdmin):
-    fields = ['customer', 'book', 'issue_date', 'return_date']
-    readonly_fields = ['return_date']
-    list_display = ['book', 'customer', 'issue_date', 'return_date']
+    fields = ['customer', 'book', 'issue_date', 'return_date']  # fields shown in the transaction edit page
+    readonly_fields = ['return_date']  # make return_date readonly in the admin form
+    list_display = ['book', 'customer', 'issue_date', 'return_date']  # show key transaction fields in the list view
 
 
 class BookReturnAdmin(admin.ModelAdmin):

@@ -1,7 +1,7 @@
-from django.db import models
-from django.core.exceptions import ValidationError
-from datetime import timedelta
-from decimal import Decimal
+from django.db import models  # import Django ORM model base classes
+from django.core.exceptions import ValidationError  # import validation error for model checks
+from datetime import timedelta  # import timedelta for date arithmetic
+from decimal import Decimal  # import Decimal for precise money handling
 # username/password for superuser - (jacygravy27,jacy2705)
 # Create your models here.
 
@@ -61,17 +61,17 @@ class BookTransaction(models.Model): # Creates a model named BookTransaction mad
     def _get_old_transaction(self): # This function is for getting any old transaction information before saved 
         return BookTransaction.objects.filter(pk=self.pk).first() if self.pk else None # It checks if there is an issue record with the same primary key if there isn't then it the program will return none but if there is a record then it will compare the old transaction with the new transaction to see if there are any changes that need to be made to the book stock
 
-    def _update_book_stock(self, old_transaction):
-        old_returned = BookReturn.objects.filter(transaction=old_transaction).exists() if old_transaction else False
-        old_issued = bool(old_transaction and old_transaction.issue_date and not old_returned)
-        new_issued = self.is_issued
-        old_book = old_transaction.book if old_transaction else None
+    def _update_book_stock(self, old_transaction): # This function is for updating the book stock based on the changes made to the transaction
+        old_returned = BookReturn.objects.filter(transaction=old_transaction).exists() if old_transaction else False # This line checks if a book return record exists for the old transaction, if there is then it means the book was returned and if there isn't then it means the book is still issued out
+        old_issued = bool(old_transaction and old_transaction.issue_date and not old_returned) # IN this line if there is an old transaction with an issue date and there isn't a book return record then it means the book was issued out in the old transaction
+        new_issued = self.is_issued # This calls the is_issued function to see if the book has been issued out in the new transaction
+        old_book = old_transaction.book if old_transaction else None # This code reaches into the book field to see if there was an old book associated with the old transaction, if there isn't then it will return none but if there is then it will compare the old book with the new book to see if there are any changes that need to be made to the book stock
 
-        if old_book and old_book != self.book and old_issued:
-            old_book.amount_of_copies = max(old_book.amount_of_copies + 1, 0)
-            old_book.save()
+        if old_book and old_book != self.book and old_issued: # This line prevents the book stock from being messed if changes are made to the transaction that don't involve the book being issued out, for example if you change the customer name or the issue date it won't change the book stock but if you change the book that is being issued out then it will update the stock of both the old and new book accordingly
+            old_book.amount_of_copies = max(old_book.amount_of_copies + 1, 0) # This line increases the stock of the old book by 1 since the book is no longer issued out in the new transaction, it also makes sure that the amount of copies doesn't go below 0
+            old_book.save() # This saves the changes made to the book stock of the old book in the database
 
-        if new_issued and (not old_issued or (old_book and old_book != self.book)):
+        if new_issued and (not old_issued or (old_book and old_book != self.book)): 
             if self.book.amount_of_copies <= 0:
                 raise ValidationError('No copies available for this book.')
             self.book.amount_of_copies -= 1
@@ -97,7 +97,7 @@ class BookTransaction(models.Model): # Creates a model named BookTransaction mad
         if self.is_issued:
             self.book.amount_of_copies = max(self.book.amount_of_copies + 1, 0)
             self.book.save()
-        super().delete()
+        super().delete() # 
 
     def __str__(self): # This will help to display the book name, customer name and the issue date in a nice line (show in admin panel)
         return self.label # This will display the book name, customer name and the issue date in a nice line (show in admin panel)
