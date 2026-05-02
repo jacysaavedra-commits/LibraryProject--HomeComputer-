@@ -71,31 +71,31 @@ class BookTransaction(models.Model): # Creates a model named BookTransaction mad
             old_book.amount_of_copies = max(old_book.amount_of_copies + 1, 0) # This line increases the stock of the old book by 1 since the book is no longer issued out in the new transaction, it also makes sure that the amount of copies doesn't go below 0
             old_book.save() # This saves the changes made to the book stock of the old book in the database
 
-        if new_issued and (not old_issued or (old_book and old_book != self.book)):  # Handles cases where the book is now issued either newly or switched to a different book
-            if self.book.amount_of_copies <= 0:  # Verifies that there are available copies before issuing
-                raise ValidationError('No copies available for this book.')  # Prevents issuing a book with no remaining stock
-            self.book.amount_of_copies -= 1  # Reduces the available copies by 1 for the issued book
-            self.book.save()  # Updates the book's stock in the database
-        elif old_issued and not new_issued:  # Manages scenarios where a previously issued book is no longer issued
-            self.book.amount_of_copies = max(self.book.amount_of_copies + 1, 0)  # Increases stock by 1, ensuring it doesn't go below zero
-            self.book.save()  # Saves the adjusted stock level
+        if new_issued and (not old_issued or (old_book and old_book != self.book)):  # This handles cases where the book is now issued either newly or switched to a different book, ensuring stock is updated accordingly
+            if self.book.amount_of_copies <= 0:  # This verifies that there are available copies before issuing, preventing over-issuing
+                raise ValidationError('No copies available for this book.')  # This raises an error to prevent issuing a book with no remaining stock
+            self.book.amount_of_copies -= 1  # This reduces the available copies by 1 for the issued book
+            self.book.save()  # This updates the book's stock in the database
+        elif old_issued and not new_issued:  # This handles scenarios where a previously issued book is no longer issued, restoring stock
+            self.book.amount_of_copies = max(self.book.amount_of_copies + 1, 0)  # This increases stock by 1, ensuring it doesn't go below zero
+            self.book.save()  # This saves the adjusted stock level
 
-    def clean(self):
-        if self.issue_date and self.return_date and self.return_date < self.issue_date:  # Checks if both issue and return dates are set and ensures return date is not before issue date
-            raise ValidationError('Return date cannot be before issue date.')  # Raises a validation error to prevent illogical date sequences
+    def clean(self):  # This validates the transaction data before saving
+        if self.issue_date and self.return_date and self.return_date < self.issue_date:  # This checks if both issue and return dates are set and ensures return date is not before issue date, preventing illogical date sequences
+            raise ValidationError('Return date cannot be before issue date.')  # This raises a validation error to prevent illogical date sequences
 
-    def save(self):
-        self._set_default_return_date()  # Automatically sets a default return date 14 days after issue if not specified
-        self.clean()  # Validates the transaction data for consistency
-        old_transaction = self._get_old_transaction()  # Retrieves the existing transaction record if updating
-        self._update_book_stock(old_transaction)  # Adjusts book stock levels based on transaction changes
-        super().save()  # Saves the transaction record to the database
+    def save(self):  # This saves the transaction and handles stock updates
+        self._set_default_return_date()  # This automatically sets a default return date 14 days after issue if not specified
+        self.clean()  # This validates the transaction data for consistency
+        old_transaction = self._get_old_transaction()  # This retrieves the existing transaction record if updating
+        self._update_book_stock(old_transaction)  # This adjusts book stock levels based on transaction changes
+        super().save()  # This saves the transaction record to the database
 
-    def delete(self):
-        if self.is_issued:  # Checks if the book is currently issued out
-            self.book.amount_of_copies = max(self.book.amount_of_copies + 1, 0)  # Restores one copy to stock upon transaction deletion
-            self.book.save()  # Persists the updated stock count
-        super().delete()  # Removes the transaction record from the database
+    def delete(self):  # This deletes the transaction and restores book stock if issued
+        if self.is_issued:  # This checks if the book is currently issued out
+            self.book.amount_of_copies = max(self.book.amount_of_copies + 1, 0)  # This restores one copy to stock upon transaction deletion, preventing negative stock
+            self.book.save()  # This persists the updated stock count
+        super().delete()  # This removes the transaction record from the database
     def __str__(self): # This will help to display the book name, customer name and the issue date in a nice line (show in admin panel)
         return self.label # This will display the book name, customer name and the issue date in a nice line (show in admin panel)
 
@@ -128,19 +128,19 @@ class BookReturn(models.Model):
             self.is_late = False  # Resets late status to False when dates are incomplete
             self.late_fee = Decimal('0.00')  # Sets late fee to zero when calculation cannot be performed
 
-    def clean(self):
-        self._validate_transaction()  # Calls the transaction validation method to check for valid return conditions
-        self._validate_dates()  # Calls the date validation method to ensure chronological order
+    def clean(self):  # This validates the return record data before saving
+        self._validate_transaction()  # This calls the transaction validation method to check for valid return conditions
+        self._validate_dates()  # This calls the date validation method to ensure chronological order
 
-    def save(self):
-        is_new_return = self._state.adding  # Determines if this is a newly created return record by checking the model state
-        self.full_clean()  # Performs full validation on all fields before saving to the database
-        self._update_late_fee()  # Invokes the method to calculate and update the late fee based on dates
-        if is_new_return and self.transaction and self.transaction.book:  # Checks if this is a new return with an associated transaction and book
-            self.transaction.book.amount_of_copies = max(self.transaction.book.amount_of_copies + 1, 0)  # Increases the book's available copies by 1 upon return, preventing negative stock
-            self.transaction.book.save()  # Saves the updated book stock to the database
-        super().save()  # Calls the parent save method to persist the return record
+    def save(self):  # This saves the return record and updates related book stock
+        is_new_return = self._state.adding  # This determines if this is a newly created return record by checking the model state
+        self.full_clean()  # This performs full validation on all fields before saving to the database
+        self._update_late_fee()  # This invokes the method to calculate and update the late fee based on dates
+        if is_new_return and self.transaction and self.transaction.book:  # This checks if this is a new return with an associated transaction and book
+            self.transaction.book.amount_of_copies = max(self.transaction.book.amount_of_copies + 1, 0)  # This increases the book's available copies by 1 upon return, preventing negative stock
+            self.transaction.book.save()  # This saves the updated book stock to the database
+        super().save()  # This calls the parent save method to persist the return record
 
-    def __str__(self):
-        return f"Return for {self.transaction.book.book_name}"  # Returns a string representation showing the book name for this return
+    def __str__(self):  # This returns a string representation of the return record
+        return f"Return for {self.transaction.book.book_name}"  # This displays the return with the book name
     
