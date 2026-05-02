@@ -1,6 +1,6 @@
 from django.db import models  # import Django ORM model base classes
 from django.core.exceptions import ValidationError  # import validation error for model checks
-from datetime import timedelta  # import timedelta for date arithmetic
+from datetime import timedelta  # import timedelta for date calculations
 from decimal import Decimal  # import Decimal for precise money handling
 # username/password for superuser - (jacygravy27,jacy2705)
 # Create your models here.
@@ -71,79 +71,76 @@ class BookTransaction(models.Model): # Creates a model named BookTransaction mad
             old_book.amount_of_copies = max(old_book.amount_of_copies + 1, 0) # This line increases the stock of the old book by 1 since the book is no longer issued out in the new transaction, it also makes sure that the amount of copies doesn't go below 0
             old_book.save() # This saves the changes made to the book stock of the old book in the database
 
-        if new_issued and (not old_issued or (old_book and old_book != self.book)): 
-            if self.book.amount_of_copies <= 0:
-                raise ValidationError('No copies available for this book.')
-            self.book.amount_of_copies -= 1
-            self.book.save()
-        elif old_issued and not new_issued:
-            self.book.amount_of_copies = max(self.book.amount_of_copies + 1, 0)
-            self.book.save()
+        if new_issued and (not old_issued or (old_book and old_book != self.book)):  # Handles cases where the book is now issued either newly or switched to a different book
+            if self.book.amount_of_copies <= 0:  # Verifies that there are available copies before issuing
+                raise ValidationError('No copies available for this book.')  # Prevents issuing a book with no remaining stock
+            self.book.amount_of_copies -= 1  # Reduces the available copies by 1 for the issued book
+            self.book.save()  # Updates the book's stock in the database
+        elif old_issued and not new_issued:  # Manages scenarios where a previously issued book is no longer issued
+            self.book.amount_of_copies = max(self.book.amount_of_copies + 1, 0)  # Increases stock by 1, ensuring it doesn't go below zero
+            self.book.save()  # Saves the adjusted stock level
 
     def clean(self):
-        if self.issue_date and self.return_date and self.return_date < self.issue_date:
-            raise ValidationError('Return date cannot be before issue date.')
+        if self.issue_date and self.return_date and self.return_date < self.issue_date:  # Checks if both issue and return dates are set and ensures return date is not before issue date
+            raise ValidationError('Return date cannot be before issue date.')  # Raises a validation error to prevent illogical date sequences
 
     def save(self):
-        self._set_default_return_date()
-        self.clean()
-
-        old_transaction = self._get_old_transaction()
-        self._update_book_stock(old_transaction)
-
-        super().save()
+        self._set_default_return_date()  # Automatically sets a default return date 14 days after issue if not specified
+        self.clean()  # Validates the transaction data for consistency
+        old_transaction = self._get_old_transaction()  # Retrieves the existing transaction record if updating
+        self._update_book_stock(old_transaction)  # Adjusts book stock levels based on transaction changes
+        super().save()  # Saves the transaction record to the database
 
     def delete(self):
-        if self.is_issued:
-            self.book.amount_of_copies = max(self.book.amount_of_copies + 1, 0)
-            self.book.save()
-        super().delete() # 
-
+        if self.is_issued:  # Checks if the book is currently issued out
+            self.book.amount_of_copies = max(self.book.amount_of_copies + 1, 0)  # Restores one copy to stock upon transaction deletion
+            self.book.save()  # Persists the updated stock count
+        super().delete()  # Removes the transaction record from the database
     def __str__(self): # This will help to display the book name, customer name and the issue date in a nice line (show in admin panel)
         return self.label # This will display the book name, customer name and the issue date in a nice line (show in admin panel)
 
 
 class BookReturn(models.Model):
-    transaction = models.OneToOneField(
-        BookTransaction,
-        on_delete=models.CASCADE,
-        related_name='book_return'
+    transaction = models.OneToOneField(  # Defines a one-to-one relationship linking each return record to exactly one book transaction
+        BookTransaction,  # Specifies the BookTransaction model as the related model for this field
+        on_delete=models.CASCADE,  # Ensures that if the associated transaction is deleted, this return record is also deleted
+        related_name='book_return'  # Allows accessing the return from a transaction instance using .book_return
     )
-    actual_return_date = models.DateField(null=True, blank=True)
-    is_late = models.BooleanField(default=False)
-    late_fee = models.DecimalField(max_digits=6, decimal_places=2, default=Decimal('0.00'))
+    actual_return_date = models.DateField(null=True, blank=True)  # Stores the date when the book was actually returned, allowing null values for optional entry
+    is_late = models.BooleanField(default=False)  # Boolean flag indicating whether the return is considered late, defaulting to False
+    late_fee = models.DecimalField(max_digits=6, decimal_places=2, default=Decimal('0.00'))  # Decimal field for storing the calculated late fee with up to 6 digits and 2 decimal places
 
     def _validate_transaction(self):
-        if self.transaction and not self.transaction.issue_date:
-            raise ValidationError({'transaction': 'Can only return books that have been issued.'})
+        if self.transaction and not self.transaction.issue_date:  # Checks if a transaction is linked and has no issue date set to prevent invalid returns
+            raise ValidationError({'transaction': 'Can only return books that have been issued.'})  # Raises a validation error if trying to return a book that was never issued
 
     def _validate_dates(self):
-        if self.actual_return_date and self.transaction and self.transaction.issue_date:
-            if self.actual_return_date < self.transaction.issue_date:
-                raise ValidationError({'actual_return_date': 'Actual return date cannot be before issue date.'})
+        if self.actual_return_date and self.transaction and self.transaction.issue_date:  # Verifies that actual return date, transaction, and issue date all exist before comparing
+            if self.actual_return_date < self.transaction.issue_date:  # Ensures the actual return date is not earlier than the issue date
+                raise ValidationError({'actual_return_date': 'Actual return date cannot be before issue date.'})  # Raises an error if the return date precedes the issue date
 
     def _update_late_fee(self):
-        if self.actual_return_date and self.transaction.return_date:
-            days_late = max(0, (self.actual_return_date - self.transaction.return_date).days)
-            self.is_late = days_late > 0
-            self.late_fee = Decimal(days_late * 5)
-        else:
-            self.is_late = False
-            self.late_fee = Decimal('0.00')
+        if self.actual_return_date and self.transaction.return_date:  # Checks if both the actual return date and expected return date are available
+            days_late = max(0, (self.actual_return_date - self.transaction.return_date).days)  # Calculates days late by subtracting expected return date from actual, ensuring non-negative result
+            self.is_late = days_late > 0  # Sets the late flag to True if there are any days late, otherwise False
+            self.late_fee = Decimal(days_late * 5)  # Computes the late fee at $5 per day late using the calculated days
+        else:  # Handles cases where required dates are missing
+            self.is_late = False  # Resets late status to False when dates are incomplete
+            self.late_fee = Decimal('0.00')  # Sets late fee to zero when calculation cannot be performed
 
     def clean(self):
-        self._validate_transaction()
-        self._validate_dates()
+        self._validate_transaction()  # Calls the transaction validation method to check for valid return conditions
+        self._validate_dates()  # Calls the date validation method to ensure chronological order
 
     def save(self):
-        is_new_return = self._state.adding
-        self.full_clean()
-        self._update_late_fee()
-        if is_new_return and self.transaction and self.transaction.book:
-            self.transaction.book.amount_of_copies = max(self.transaction.book.amount_of_copies + 1, 0)
-            self.transaction.book.save()
-        super().save()
+        is_new_return = self._state.adding  # Determines if this is a newly created return record by checking the model state
+        self.full_clean()  # Performs full validation on all fields before saving to the database
+        self._update_late_fee()  # Invokes the method to calculate and update the late fee based on dates
+        if is_new_return and self.transaction and self.transaction.book:  # Checks if this is a new return with an associated transaction and book
+            self.transaction.book.amount_of_copies = max(self.transaction.book.amount_of_copies + 1, 0)  # Increases the book's available copies by 1 upon return, preventing negative stock
+            self.transaction.book.save()  # Saves the updated book stock to the database
+        super().save()  # Calls the parent save method to persist the return record
 
     def __str__(self):
-        return f"Return for {self.transaction.book.book_name}"
+        return f"Return for {self.transaction.book.book_name}"  # Returns a string representation showing the book name for this return
     
