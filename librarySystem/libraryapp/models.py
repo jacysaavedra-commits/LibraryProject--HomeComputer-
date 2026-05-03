@@ -1,5 +1,5 @@
 from django.db import models  # import Django ORM model base classes
-from django.core.exceptions import ValidationError  # import validation error for model checks
+from django.core.exceptions import ObjectDoesNotExist, ValidationError  # import validation errors for model checks
 from datetime import timedelta  # import timedelta for date calculations
 from decimal import Decimal  # import Decimal for precise money handling
 # username/password for superuser - (jacygravy27,jacy2705)
@@ -93,6 +93,8 @@ class BookTransaction(models.Model): # Creates a model named BookTransaction mad
     def is_issued(self): # this creates a Funciion for checking if a books is issued out
         if not self.issue_date: # If the issue date is empty then the following code will run
             return False # Tells the program that a book isn't issued out when there's no issue date
+        if not self.pk:  # For a new transaction that hasn't been saved yet, assume it is issued when there is an issue date
+            return True
         return not BookReturn.objects.filter(transaction=self).exists() # This checks in the BookReturn model meaning if a similar book was returned then it would return false but if it wasn't returned it would return true meaning the book is still issued out
 
     @property # This allows you to have accessible functions that dont require brackets () to call them
@@ -165,7 +167,7 @@ class BookReturn(models.Model):
                 raise ValidationError({'actual_return_date': 'Actual return date cannot be before issue date.'})  # Raises an error if the return date precedes the issue date
 
     def clean(self):  # This validates the return record data before saving
-        if not self.transaction:  # Ensure a transaction is selected before saving a return record
+        if getattr(self, 'transaction_id', None) is None:  # Ensure a transaction is selected before saving a return record
             raise ValidationError({'transaction': 'Please select a valid issued transaction to return.'})  # Raise a clear validation error when no transaction is chosen
         self._validate_transaction()  # This calls the transaction validation method to check for valid return conditions
         self._validate_dates()  # This calls the date validation method to ensure chronological order
@@ -189,7 +191,13 @@ class BookReturn(models.Model):
         super().save()  # This calls the parent save method to persist the return record
 
     def __str__(self):  # This returns a string representation of the return record
-        if not self.transaction or not self.transaction.book:  # If there is no transaction or book, avoid crashing when displaying the object
+        try:  # Accessing self.transaction can fail before the relation is set
+            transaction = self.transaction
+        except ObjectDoesNotExist:  # If the transaction is not available yet, show a safe fallback
+            return "Return record without transaction"
+
+        if not transaction or not transaction.book:  # If there is no transaction or book, avoid crashing when displaying the object
             return "Return record without transaction"  # Return a safe fallback string for display
-        return f"Return for {self.transaction.book.book_name}"  # This displays the return with the book name
+
+        return f"Return for {transaction.book.book_name}"  # This displays the return with the book name
     
