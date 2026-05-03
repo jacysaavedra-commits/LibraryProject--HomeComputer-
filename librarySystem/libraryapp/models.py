@@ -75,6 +75,10 @@ class Book(models.Model): # Creates a model named Book made for holding book inf
     def __str__(self): # Displays the book name and author as a string 
         return f"{self.book_name} by {self.book_author}" # Makes whatever is inputted as book name and author as a string 
 
+# The Model below is for holding book transaction information such as the customer who issued the book, the book that was issued, the issue date and the return date
+# The Model has error handling to make sure that the return date isn't before the issue date 
+# The Model will also automatically set the return date of the book to 14 days after the issue date
+# The Model also has functions for checking if a book is currently issued out
 class BookTransaction(models.Model): # Creates a model named BookTransaction made for holding book transaction information
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, null=True, blank=True) # Creates a Many-to-one relationship with the customer model and all makes it so that when a customer is deleted their transaction history is also deleted
     book = models.ForeignKey(Book, on_delete=models.CASCADE) # Creates a Many-to-one relationship with the book model and makes it so that when a book is deleted all transactions associated with that book are also deleted
@@ -138,7 +142,9 @@ class BookTransaction(models.Model): # Creates a model named BookTransaction mad
     def __str__(self): # This will help to display the book name, customer name and the issue date in a nice line (show in admin panel)
         return self.label # This will display the book name, customer name and the issue date in a nice line (show in admin panel)
 
-
+# The model below is for returning books and it is linked to the book transaction model 
+# It also can issue out fees for late returns based on when the book was returned
+# It also has error handling so you cant set a retrun date before the issue date
 class BookReturn(models.Model):
     transaction = models.OneToOneField(  # Defines a one-to-one relationship linking each return record to exactly one book transaction
         BookTransaction,  # Specifies the BookTransaction model as the related model for this field
