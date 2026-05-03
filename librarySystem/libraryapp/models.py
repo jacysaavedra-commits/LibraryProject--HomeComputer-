@@ -5,45 +5,69 @@ from decimal import Decimal  # import Decimal for precise money handling
 # username/password for superuser - (jacygravy27,jacy2705)
 # Create your models here.
 
+# The Model below is for holding and storing customer information such as the first and last name of the customer
+# The Model also has error handling so you cant input a fist or last name longer than 30 characters
 class Customer(models.Model): # Creates a model named Customer made for holding customer information
     student_id = models.AutoField(primary_key=True) # Creates an automatic gives a unique id for each customer 
-    first_name = models.CharField(
-        max_length=40,
-        error_messages={'max_length': 'First name may not exceed 30 characters.'}
-    ) # Creates a charfield for strings of text with a max character length of 30 for first names
-    last_name = models.CharField(
-        max_length=40,
-        error_messages={'max_length': 'Last name may not exceed 30 characters.'}
-    ) # Creates a charfield for strings of text with a max character length of 30 for last names
+    first_name = models.CharField(max_length=40) # Creates a charfield for strings of text with a max character length of 40 for first names
+    last_name = models.CharField(max_length=40) # Creates a charfield for strings of text with a max character length of 40 for last names
+
+    def clean(self):  # Validate customer field lengths before save
+        errors = {} # This initializes an empty dictionary to hold any validation errors that may be found during the checks
+        if self.first_name and len(self.first_name) > 30:  # Makes sure that the first name doesn't exceed 30 characters
+            errors['first_name'] = 'First name may not exceed 30 characters.' # Error message if the first name is longer than 30 characters
+        if self.last_name and len(self.last_name) > 30:  # Makes sure that the last name doesn't exceed 30 characters
+            errors['last_name'] = 'Last name may not exceed 30 characters.' # Error message if the last name is longer than 30 characters
+        if errors: # If there are any errors collected in the dictionary, this condition will be true and the following code will execute
+            raise ValidationError(errors)  # raise ValidationError for invalid customer input
+
+    def save(self):  # Save customer after validation
+        self.full_clean()  # validate before saving
+        super().save()  # Saves the customer information in the database
 
     def __str__(self): # Makes it so that it displays first and last name as a string instead of the default object name when printed
         return f"{self.first_name} {self.last_name}" # Makes whatever is inputted as first and last name as a string 
-    
+
+# The Model below is for the Genres of the books and in the program you will be able to input a genre 
+# The Model also hass error handling so you cant input a genre longer than 30 characters
 class Genre(models.Model): # Creates a model named Genre made for holding genre information
-    genre_name = models.CharField(
-        max_length=40,
-        error_messages={'max_length': 'Genre name may not exceed 30 characters.'}
-    ) # Creates a charfield for strings of text with a max character length of 30 for genre names
+    genre_name = models.CharField(max_length=40) # Creates a charfield for strings of text with a max character length of 40 for genre names
+
+    def clean(self):  # Validate genre field lengths before save
+        if self.genre_name and len(self.genre_name) > 30:  # validate genre name length
+            raise ValidationError({'genre_name': 'Genre name may not exceed 30 characters.'})  # raise ValidationError for invalid genre input
+
+    def save(self):  # Save genre after validation
+        self.full_clean()  # validate before saving
+        super().save()  # save model instance
 
     def __str__(self): # Displays the genre inputted as a string 
         return self.genre_name # Makes whatever is inputted as genre name as a string 
-    
+
+# The Model below is for inputting book information such as the Book name and the author
+# The Model has error handling for charfield inputs for inputs longer than 30 characters  
+# it has error handling so you cant input a negative number of copies and if you do it will automatically set the amount of copies to 0
+# It also is linked to the genre model so you can assign genres you stored in the genre model to books     
 class Book(models.Model): # Creates a model named Book made for holding book information
     
     book_id = models.AutoField(primary_key=True) # Creates an automatic gives a unique id for each book
-    book_name = models.CharField(
-        max_length=40,
-        error_messages={'max_length': 'Book name may not exceed 30 characters.'}
-    ) # Creates a charfield for strings of text with a max character length of 30 for book names
-    book_author = models.CharField(
-        max_length=40,
-        error_messages={'max_length': 'Book author may not exceed 30 characters.'}
-    ) # Creates a charfield for strings of text with a max character length of 30 for book authors
+    book_name = models.CharField(max_length=40) # Creates a charfield for strings of text with a max character length of 40 for book names
+    book_author = models.CharField(max_length=40) # Creates a charfield for strings of text with a max character length of 40 for book authors
     
     genre = models.ForeignKey(Genre, on_delete=models.CASCADE, null=True, blank=True) # Creates a Many-to-one relationship by linking to the genre model, also makes it so that if a genre were deleted it would delete all books associated with that genre and allows for the genre to have a empty value 
     amount_of_copies = models.PositiveIntegerField(default=1) # Makes a positive integer field so you cant input a negative amount of copies for books, and it sets the default copy of bboks to 1
 
+    def clean(self):  # Validate book field lengths before save
+        errors = {}
+        if self.book_name and len(self.book_name) > 30:  # validate book name length
+            errors['book_name'] = 'Book name may not exceed 30 characters.'
+        if self.book_author and len(self.book_author) > 30:  # validate book author length
+            errors['book_author'] = 'Book author may not exceed 30 characters.'
+        if errors:
+            raise ValidationError(errors)  # raise ValidationError for invalid book input
+
     def save(self): # This overrides the built in Django save method so that in Book model when you save a book the code below happens
+        self.full_clean()  # validate before saving
         if self.amount_of_copies < 0: # Checks if the amount of copies is less than 0
             self.amount_of_copies = 0 # if the amount of copies is set as a negative number it will automatically set to 0
         super().save() # Saves all the changes saved to the book model in the database
