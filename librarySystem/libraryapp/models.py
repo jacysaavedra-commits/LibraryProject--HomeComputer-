@@ -7,14 +7,23 @@ from decimal import Decimal  # import Decimal for precise money handling
 
 class Customer(models.Model): # Creates a model named Customer made for holding customer information
     student_id = models.AutoField(primary_key=True) # Creates an automatic gives a unique id for each customer 
-    first_name = models.CharField(max_length=30) # Creates a charfield for strings of text with a max character length of 30 for first names
-    last_name = models.CharField(max_length=30) # Creates a charfield for strings of text with a max character length of 30 for last names
+    first_name = models.CharField(
+        max_length=40,
+        error_messages={'max_length': 'First name may not exceed 30 characters.'}
+    ) # Creates a charfield for strings of text with a max character length of 30 for first names
+    last_name = models.CharField(
+        max_length=40,
+        error_messages={'max_length': 'Last name may not exceed 30 characters.'}
+    ) # Creates a charfield for strings of text with a max character length of 30 for last names
 
     def __str__(self): # Makes it so that it displays first and last name as a string instead of the default object name when printed
         return f"{self.first_name} {self.last_name}" # Makes whatever is inputted as first and last name as a string 
     
 class Genre(models.Model): # Creates a model named Genre made for holding genre information
-    genre_name = models.CharField(max_length=30) # Creates a charfield for strings of text with a max character length of 30 for genre names
+    genre_name = models.CharField(
+        max_length=40,
+        error_messages={'max_length': 'Genre name may not exceed 30 characters.'}
+    ) # Creates a charfield for strings of text with a max character length of 30 for genre names
 
     def __str__(self): # Displays the genre inputted as a string 
         return self.genre_name # Makes whatever is inputted as genre name as a string 
@@ -22,8 +31,14 @@ class Genre(models.Model): # Creates a model named Genre made for holding genre 
 class Book(models.Model): # Creates a model named Book made for holding book information
     
     book_id = models.AutoField(primary_key=True) # Creates an automatic gives a unique id for each book
-    book_name = models.CharField(max_length=30) # Creates a charfield for strings of text with a max character length of 30 for book names
-    book_author = models.CharField(max_length=30) # Creates a charfield for strings of text with a max character length of 30 for book authors
+    book_name = models.CharField(
+        max_length=40,
+        error_messages={'max_length': 'Book name may not exceed 30 characters.'}
+    ) # Creates a charfield for strings of text with a max character length of 30 for book names
+    book_author = models.CharField(
+        max_length=40,
+        error_messages={'max_length': 'Book author may not exceed 30 characters.'}
+    ) # Creates a charfield for strings of text with a max character length of 30 for book authors
     
     genre = models.ForeignKey(Genre, on_delete=models.CASCADE, null=True, blank=True) # Creates a Many-to-one relationship by linking to the genre model, also makes it so that if a genre were deleted it would delete all books associated with that genre and allows for the genre to have a empty value 
     amount_of_copies = models.PositiveIntegerField(default=1) # Makes a positive integer field so you cant input a negative amount of copies for books, and it sets the default copy of bboks to 1
@@ -119,18 +134,20 @@ class BookReturn(models.Model):
             if self.actual_return_date < self.transaction.issue_date:  # Ensures the actual return date is not earlier than the issue date
                 raise ValidationError({'actual_return_date': 'Actual return date cannot be before issue date.'})  # Raises an error if the return date precedes the issue date
 
+    def clean(self):  # This validates the return record data before saving
+        if not self.transaction:  # Ensure a transaction is selected before saving a return record
+            raise ValidationError({'transaction': 'Please select a valid issued transaction to return.'})  # Raise a clear validation error when no transaction is chosen
+        self._validate_transaction()  # This calls the transaction validation method to check for valid return conditions
+        self._validate_dates()  # This calls the date validation method to ensure chronological order
+
     def _update_late_fee(self):
-        if self.actual_return_date and self.transaction.return_date:  # Checks if both the actual return date and expected return date are available
+        if self.actual_return_date and self.transaction and self.transaction.return_date:  # Checks required fields safely before using them
             days_late = max(0, (self.actual_return_date - self.transaction.return_date).days)  # Calculates days late by subtracting expected return date from actual, ensuring non-negative result
             self.is_late = days_late > 0  # Sets the late flag to True if there are any days late, otherwise False
             self.late_fee = Decimal(days_late * 5)  # Computes the late fee at $5 per day late using the calculated days
-        else:  # Handles cases where required dates are missing
+        else:  # Handles cases where required dates are missing or transaction is not selected
             self.is_late = False  # Resets late status to False when dates are incomplete
             self.late_fee = Decimal('0.00')  # Sets late fee to zero when calculation cannot be performed
-
-    def clean(self):  # This validates the return record data before saving
-        self._validate_transaction()  # This calls the transaction validation method to check for valid return conditions
-        self._validate_dates()  # This calls the date validation method to ensure chronological order
 
     def save(self):  # This saves the return record and updates related book stock
         is_new_return = self._state.adding  # This determines if this is a newly created return record by checking the model state
@@ -142,5 +159,7 @@ class BookReturn(models.Model):
         super().save()  # This calls the parent save method to persist the return record
 
     def __str__(self):  # This returns a string representation of the return record
+        if not self.transaction or not self.transaction.book:  # If there is no transaction or book, avoid crashing when displaying the object
+            return "Return record without transaction"  # Return a safe fallback string for display
         return f"Return for {self.transaction.book.book_name}"  # This displays the return with the book name
     

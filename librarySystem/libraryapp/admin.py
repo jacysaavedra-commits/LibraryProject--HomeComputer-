@@ -23,6 +23,7 @@ class BookReturnAdmin(admin.ModelAdmin):  # This creates a custom admin configur
     def formfield_for_foreignkey(self, db_field, request, **kwargs):  # This overrides the default foreign key field to customize available options for the transaction field
         if db_field.name == 'transaction':  # This specifically targets the transaction foreign key field to filter options
             kwargs['queryset'] = BookTransaction.objects.filter(issue_date__isnull=False, book_return__isnull=True)  # This filters the queryset to only include issued transactions without returns, preventing invalid selections
+            kwargs['empty_label'] = 'Select issued transaction'  # This provides a clear prompt when no transaction is selected yet
         return super().formfield_for_foreignkey(db_field, request, **kwargs)  # This calls the parent method for standard behavior on other fields
 
     def late_status(self, obj):  # This creates a custom display method for the late status in the admin list, making it user-friendly
