@@ -16,8 +16,8 @@ class BookTransactionAdmin(admin.ModelAdmin):  # This creates a custom admin con
 
 
 class BookReturnAdmin(admin.ModelAdmin):  # This creates a custom admin configuration for the BookReturn model to handle return records properly
-    fields = ['transaction', 'actual_return_date', 'late_status', 'late_fee', 'transaction_description']  # This specifies the fields to display in the return edit form, including return details and calculations
-    readonly_fields = ['late_status', 'late_fee', 'transaction_description']  # This makes computed fields read-only in the admin, as they are auto-calculated
+    fields = ['transaction', 'actual_return_date', 'late_status', 'late_fee']  # This specifies the fields to display in the return edit form, including return details and calculations
+    readonly_fields = ['late_status', 'late_fee']  # This makes computed fields read-only in the admin, as they are auto-calculated
     list_display = ['transaction_description', 'actual_return_date', 'late_status', 'late_fee']  # This defines the columns shown in the return list view, summarizing return information
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):  # This overrides the default foreign key field to customize available options for the transaction field

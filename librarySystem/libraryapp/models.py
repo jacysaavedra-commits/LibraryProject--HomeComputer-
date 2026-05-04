@@ -63,6 +63,8 @@ class Book(models.Model): # Creates a model named Book made for holding book inf
             errors['book_name'] = 'Book name may not exceed 30 characters.'
         if self.book_author and len(self.book_author) > 30:  # validate book author length
             errors['book_author'] = 'Book author may not exceed 30 characters.'
+        if self.genre is None:
+            errors['genre'] = 'Please select a genre.'
         if errors:
             raise ValidationError(errors)  # raise ValidationError for invalid book input
 
@@ -126,8 +128,15 @@ class BookTransaction(models.Model): # Creates a model named BookTransaction mad
             self.book.save()  # This saves the adjusted stock level
 
     def clean(self):  # This validates the transaction data before saving
+        errors = {}
+        if self.customer is None:
+            errors['customer'] = 'Please select a customer.'
+        if self.book is None:
+            errors['book'] = 'Please select a book.'
         if self.issue_date and self.return_date and self.return_date < self.issue_date:  # This checks if both issue and return dates are set and ensures return date is not before issue date, preventing illogical date sequences
-            raise ValidationError('Return date cannot be before issue date.')  # This raises a validation error to prevent illogical date sequences
+            errors['return_date'] = 'Return date cannot be before issue date.'  # This raises a validation error to prevent illogical date sequences
+        if errors:
+            raise ValidationError(errors)
 
     def save(self):  # This saves the transaction and handles stock updates
         self._set_default_return_date()  # This automatically sets a default return date 14 days after issue if not specified
