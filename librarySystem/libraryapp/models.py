@@ -2,7 +2,7 @@ from django.db import models  # import Django ORM model base classes
 from django.core.exceptions import ObjectDoesNotExist, ValidationError  # import validation errors for model checks
 from datetime import timedelta  # import timedelta for date calculations
 from decimal import Decimal  # import Decimal for precise money handling
-# username/password for superuser - (jacygravy27,jacy2705)
+
 # Create your models here.
 
 # The Model below is for holding and storing customer information such as the first and last name of the customer
