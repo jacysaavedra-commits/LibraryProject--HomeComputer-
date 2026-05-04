@@ -93,17 +93,18 @@ class BookTransaction(models.Model): # Creates a model named BookTransaction mad
 
     @property # Allows you to have accessible functions that dont require brackets () to call them 
     def is_issued(self): # this creates a Funciion for checking if a books is issued out
-        if not self.issue_date: # If the issue date is empty then the following code will run
-            return False # Tells the program that a book isn't issued out when there's no issue date
+        if not self.issue_date or not getattr(self, 'book_id', None): # If the issue date is empty or book is not selected then the following code will run
+            return False # Tells the program that a book isn't issued out when there's no issue date or book
         if not self.pk:  # For a new transaction that hasn't been saved yet, assume it is issued when there is an issue date
             return True
         return not BookReturn.objects.filter(transaction=self).exists() # This checks in the BookReturn model meaning if a similar book was returned then it would return false but if it wasn't returned it would return true meaning the book is still issued out
 
     @property # This allows you to have accessible functions that dont require brackets () to call them
     def label(self): # This creates a function for displaying the book transaction information in a specific format
-        customer_name = str(self.customer) if self.customer else 'Unknown customer' # this will print the customer name if there is a customer associated with the transaction but if there isn't it will state unknown customer instead
+        customer_name = str(self.customer) if getattr(self, 'customer_id', None) else 'Unknown customer' # this will print the customer name if there is a customer associated with the transaction but if there isn't it will state unknown customer instead
         issue_date = self.issue_date.isoformat() if self.issue_date else 'no issue date' # This checks if there is an issue date and if there isn't then it will state that there is no issue date
-        return f"{self.book.book_name} - {customer_name} - {issue_date}" # This will display the book name, customer name and the issue date in a nice line (show in admin panel)
+        book_name = self.book.book_name if getattr(self, 'book_id', None) else 'No book selected' # This safely checks if a book exists by checking the foreign key ID, preventing crashes when book is None
+        return f"{book_name} - {customer_name} - {issue_date}" # This will display the book name, customer name and the issue date in a nice line (show in admin panel)
 
     def _get_old_transaction(self): # This function is for getting any old transaction information before saved 
         return BookTransaction.objects.filter(pk=self.pk).first() if self.pk else None # It checks if there is an issue record with the same primary key if there isn't then it the program will return none but if there is a record then it will compare the old transaction with the new transaction to see if there are any changes that need to be made to the book stock
@@ -129,9 +130,9 @@ class BookTransaction(models.Model): # Creates a model named BookTransaction mad
 
     def clean(self):  # This validates the transaction data before saving
         errors = {}
-        if self.customer is None:
+        if not getattr(self, 'customer_id', None):
             errors['customer'] = 'Please select a customer.'
-        if self.book is None:
+        if not getattr(self, 'book_id', None):
             errors['book'] = 'Please select a book.'
         if self.issue_date and self.return_date and self.return_date < self.issue_date:  # This checks if both issue and return dates are set and ensures return date is not before issue date, preventing illogical date sequences
             errors['return_date'] = 'Return date cannot be before issue date.'  # This raises a validation error to prevent illogical date sequences
