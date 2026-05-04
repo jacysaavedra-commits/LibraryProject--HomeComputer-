@@ -41,6 +41,6 @@ class BookReturnAdmin(admin.ModelAdmin):  # This creates a custom admin configur
 
 admin.site.register(Book, BookAdmin)
 admin.site.register(Genre)
-admin.site.register()
+admin.site.register(Customer)
 admin.site.register(BookReturn, BookReturnAdmin)
 admin.site.register(BookTransaction, BookTransactionAdmin)

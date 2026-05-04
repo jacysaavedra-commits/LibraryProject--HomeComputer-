@@ -177,8 +177,13 @@ class BookReturn(models.Model):
                 raise ValidationError({'actual_return_date': 'Actual return date cannot be before issue date.'})  # Raises an error if the return date precedes the issue date
 
     def clean(self):  # This validates the return record data before saving
+        errors = {}  # Initialize dictionary to collect all validation errors
         if getattr(self, 'transaction_id', None) is None:  # Ensure a transaction is selected before saving a return record
-            raise ValidationError({'transaction': 'Please select a valid issued transaction to return.'})  # Raise a clear validation error when no transaction is chosen
+            errors['transaction'] = 'Please select a valid issued transaction to return.'  # Add transaction error
+        if not self.actual_return_date:  # Check if actual return date is provided
+            errors['actual_return_date'] = 'Please provide an actual return date.'  # Add return date error
+        if errors:  # If any errors were collected
+            raise ValidationError(errors)  # Raise all collected errors at once
         self._validate_transaction()  # This calls the transaction validation method to check for valid return conditions
         self._validate_dates()  # This calls the date validation method to ensure chronological order
 
