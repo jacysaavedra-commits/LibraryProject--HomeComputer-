@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head><title>AC Library</title>
+<style>
+    #header {
+        background-color: rgb(0, 0, 0);
+        color: rgb(250, 137, 8);
+        text-align: center;
+        padding: 20px;
+        border: 2px solid orange ;
+        font-size: xx-large;
+        font-family: Arial, Helvetica, sans-serif;
+        font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+        margin: auto;
+    }
+    #nav{
+        background-color: antiquewhite;
+        overflow: hidden;
+        border: 2px solid black;
+        text-align: center;
+    }
+    #nav a{
+        float: left;
+        display: block;
+        color: rgb(0, 0, 0);
+        text-align: center;
+        padding: 14px 16px;
+        text-decoration: none;
+    }
+    #nav a:hover{
+        background-color: aliceblue;
+        color: black;
+    }
+    #Content{
+        background-color:orange ;
+        margin: 20px;
+        padding: 20px;
+        border: 2px solid black;
+        min-height: 400px;
+        color: black;
+        font-size: small;
+    }
+    #footer{
+        background-color: black;
+        color: orange;
+        text-align: center;
+        padding: 10px;
+        border: 2px solid black;
+        font-size: small;
+    }
+</style> 
+</head>
+<body>
+    <div id="header">
+        <h1> AC library</h1>
+    </div>
+    <div id="nav">
+        <a href="#">Home</a>
+        <a href="#">Books</a>
+        <a href="#">Sign In</a>
+    </div>
+    <div id="Content">
+        {% block content}
+        {% endblock}
+    </div>
+    <div id="footer">
+        <P>&copy AC Library 2026</P>
+    </div>
+</body>
+</html>
