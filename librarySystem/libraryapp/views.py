@@ -15,8 +15,6 @@ def books(request):
     return render(request, 'books.html')
 def authors(request):
     return render(request, 'authors.html')
-def login(request):
-    return render(request, 'login.html')
 def register(request):
     if request.method == 'POST':
         first_name = request.POST.get("first_name")
@@ -55,7 +53,7 @@ def login(request):
 
         try:
             student = Customer.objects.get(email=email)
-            if check_password(password, student.password)):
+            if check_password(password, student.password):
                 request.session['customer_id'] = student.student_id
                 request.session['customer_name'] = student.first_name
                 return redirect('home')

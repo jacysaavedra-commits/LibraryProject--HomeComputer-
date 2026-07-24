@@ -11,7 +11,7 @@ class Customer(models.Model): # Creates a model named Customer made for holding 
     student_id = models.AutoField(primary_key=True) # Creates an automatic gives a unique id for each customer 
     first_name = models.CharField(max_length=40) # Creates a charfield for strings of text with a max character length of 40 for first names
     last_name = models.CharField(max_length=40) # Creates a charfield for strings of text with a max character length of 40 for last names
-
+    password = models.CharField(max_length=15) # Creates a charfield for strings of text with a max character length of 15 for passwords
     def clean(self):  # Validate customer field lengths before save
         errors = {} # This initializes an empty dictionary to hold any validation errors that may be found during the checks
         if self.first_name and len(self.first_name) > 30:  # Makes sure that the first name doesn't exceed 30 characters
