@@ -46,7 +46,22 @@ def register(request):
                 "last_name": last_name,
                 "email": email,
             })
-        return render(request, "register.html")
+    return render(request, "register.html")
     
+def login(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        password = request.POST.get('password')
 
+        try:
+            student = Customer.objects.get(email=email)
+            if check_password(password, student.password)):
+                request.session['customer_id'] = student.student_id
+                request.session['customer_name'] = student.first_name
+                return redirect('home')
+            else:
+                return render(request, 'login.html', {'error': 'Invalid email or password.'})
+        except Customer.DoesNotExist:
+            return render(request, 'login.html', {'error': 'Invalid email or password.'})
+    return render(request, 'login.html')
        
