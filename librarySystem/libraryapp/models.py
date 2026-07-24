@@ -53,9 +53,10 @@ class Book(models.Model): # Creates a model named Book made for holding book inf
     book_id = models.AutoField(primary_key=True) # Creates an automatic gives a unique id for each book
     book_name = models.CharField(max_length=40) # Creates a charfield for strings of text with a max character length of 40 for book names
     book_author = models.CharField(max_length=40) # Creates a charfield for strings of text with a max character length of 40 for book authors
-    
+
     genre = models.ForeignKey(Genre, on_delete=models.CASCADE, null=True, blank=True) # Creates a Many-to-one relationship by linking to the genre model, also makes it so that if a genre were deleted it would delete all books associated with that genre and allows for the genre to have a empty value 
     amount_of_copies = models.PositiveIntegerField(default=1) # Makes a positive integer field so you cant input a negative amount of copies for books, and it sets the default copy of bboks to 1
+    img = models.ImageField(upload_to='book_images/', null=True, blank=True)  # Creates an image field for uploading book images, allowing null and blank values
 
     def clean(self):  # Validate book field lengths before save
         errors = {}
