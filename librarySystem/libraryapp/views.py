@@ -19,7 +19,6 @@ def register(request):
     if request.method == 'POST':
         first_name = request.POST.get("first_name")
         last_name = request.POST.get("last_name")
-        email = request.POST.get('email')
         password = request.POST.get('password')
         confirm_password = request.POST.get('confirm_password')
 
@@ -30,9 +29,8 @@ def register(request):
                 },
                 "first_name": first_name,
                 "last_name": last_name,
-                "email": email,
             })
-        student = Customer(first_name=first_name, last_name=last_name, email=email, password=password)
+        student = Customer(first_name=first_name, last_name=last_name, password=password)
         try:
             student.full_clean()
             student.save()
@@ -42,7 +40,6 @@ def register(request):
                 "errors": e.message_dict,
                 "first_name": first_name,
                 "last_name": last_name,
-                "email": email,
             })
     return render(request, "register.html")
     
