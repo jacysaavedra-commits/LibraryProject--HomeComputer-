@@ -1,7 +1,4 @@
 from django.shortcuts import redirect, render
-from .models import Book
-from django.contrib.auth.hashers import check_password
-from django.shortcuts import redirect, render
 from .models import Book, Customer
 from django.core.exceptions import ValidationError
 
@@ -45,18 +42,18 @@ def register(request):
     
 def login(request):
     if request.method == 'POST':
-        email = request.POST.get('email')
+        username = request.POST.get('username')
         password = request.POST.get('password')
 
         try:
-            student = Customer.objects.get(email=email)
-            if check_password(password, student.password):
+            student = Customer.objects.get(first_name=username)
+            if password == student.password:
                 request.session['customer_id'] = student.student_id
                 request.session['customer_name'] = student.first_name
                 return redirect('home')
             else:
-                return render(request, 'login.html', {'error': 'Invalid email or password.'})
+                return render(request, 'login.html', {'error': 'Invalid username or password.'})
         except Customer.DoesNotExist:
-            return render(request, 'login.html', {'error': 'Invalid email or password.'})
+            return render(request, 'login.html', {'error': 'Invalid username or password.'})
     return render(request, 'login.html')
        
