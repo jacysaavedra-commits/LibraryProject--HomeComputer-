@@ -43,6 +43,7 @@ def register(request):
     
 def login(request):
     if request.method == 'POST':
+        email = request.POST.get('email')
         username = request.POST.get('username')
         password = request.POST.get('password')
 
