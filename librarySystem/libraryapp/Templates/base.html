@@ -19,8 +19,12 @@
                 <a href="{% url 'authors' %}">Authors</a>
             </nav>
             <div class="auth-wrap">
-                <a class="btn btn-login" href="{% url 'login' %}">Login</a>
-                <a class="btn btn-admin" href="/admin/">Admin</a>
+                {% if request.session.customer_id %}
+                    <a class="btn btn-logout" href="{% url 'logout' %}">Logout</a>
+                {% else %}
+                    <a class="btn btn-login" href="{% url 'login' %}">Login</a>
+                    <a class="btn btn-admin" href="/admin/">Admin</a>
+                {% endif %}
             </div>
         </div>
     </header>

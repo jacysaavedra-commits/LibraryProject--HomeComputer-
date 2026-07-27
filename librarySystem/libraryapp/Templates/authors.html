@@ -114,7 +114,7 @@ button:hover{
 </style>
 
 
-<h1>Featured Authors</h1>
+<h1>Featured Books</h1>
 
 
 <div class="slider">
@@ -133,12 +133,12 @@ button:hover{
 
 
             {% if book.img %}
-                <img src="{{ book.img.url }}" alt="{{ book.title }}">
+                <img src="{{ book.img.url }}" alt="{{ book.book_name }}">
             {% endif %}
 
 
-            <div class="title">{{ book.title }}</div>
-            <div class="author">{{ book.author }}</div>
+            <div class="title">{{ book.book_name }}</div>
+            <div class="author">{{ book.book_author }}</div>
 
 
         </div>

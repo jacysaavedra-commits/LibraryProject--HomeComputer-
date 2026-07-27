@@ -11,7 +11,8 @@ def home(request):
 def books(request):
     return render(request, 'books.html')
 def authors(request):
-    return render(request, 'authors.html')
+    books = Book.objects.all()
+    return render(request, 'authors.html', {'books': books})
 def register(request):
     if request.method == 'POST':
         first_name = request.POST.get("first_name")
@@ -45,15 +46,18 @@ def login(request):
         username = request.POST.get('username')
         password = request.POST.get('password')
 
-        try:
-            student = Customer.objects.get(first_name=username)
-            if password == student.password:
-                request.session['customer_id'] = student.student_id
-                request.session['customer_name'] = student.first_name
-                return redirect('home')
-            else:
-                return render(request, 'login.html', {'error': 'Invalid username or password.'})
-        except Customer.DoesNotExist:
+        # Use filter().first() to avoid MultipleObjectsReturned when first names are not unique
+        student = Customer.objects.filter(first_name=username).first()
+        if student and password == student.password:
+            request.session['customer_id'] = student.student_id
+            request.session['customer_name'] = student.first_name
+            return redirect('home')
+        else:
             return render(request, 'login.html', {'error': 'Invalid username or password.'})
     return render(request, 'login.html')
+
+
+def logout(request):
+    request.session.flush()
+    return redirect('login')
        
