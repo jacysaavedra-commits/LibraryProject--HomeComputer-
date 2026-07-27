@@ -2,16 +2,16 @@ from django.shortcuts import redirect, render
 from .models import Book, Customer
 from django.core.exceptions import ValidationError
 
-def Books(request):
-    books = Book.objects.all()
-    return render(request, 'books.html', {'books': books})
 # Create your views here.
 def home(request):
     return render(request, 'home.html')
+
 def books(request):
     return render(request, 'books.html')
+
 def authors(request):
-    return render(request, 'authors.html')
+    books = Book.objects.all()
+    return render(request, 'authors.html', {'books': books})
 def register(request):
     if request.method == 'POST':
         first_name = request.POST.get("first_name")
