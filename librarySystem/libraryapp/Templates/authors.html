@@ -131,17 +131,13 @@ button:hover{
 
 
         <div class="book">
-
-
-            {% if book.img %}
-                <img src="{{ book.img.url }}" alt="{{ book.book_name }}">
-            {% endif %}
-
-
-            <div class="title">{{ book.book_name }}</div>
-            <div class="author">by {{ book.book_author }}</div>
-
-
+            <a class="book-link" href="{% url 'book_detail' book.book_id %}">
+                {% if book.img %}
+                    <img src="{{ book.img.url }}" alt="{{ book.book_name }}">
+                {% endif %}
+                <div class="title">{{ book.book_name }}</div>
+                <div class="author">by {{ book.book_author }}</div>
+            </a>
         </div>
 
 

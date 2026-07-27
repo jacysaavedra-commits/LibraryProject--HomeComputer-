@@ -1,4 +1,4 @@
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from .models import Book, Customer
 from django.core.exceptions import ValidationError
 
@@ -12,6 +12,11 @@ def books(request):
 def authors(request):
     books = Book.objects.all()
     return render(request, 'authors.html', {'books': books})
+
+def book_detail(request, book_id):
+    book = get_object_or_404(Book, book_id=book_id)
+    return render(request, 'book_detail.html', {'book': book})
+
 def register(request):
     if request.method == 'POST':
         first_name = request.POST.get("first_name")

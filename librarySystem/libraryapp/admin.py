@@ -5,7 +5,7 @@ from .models import Book, Genre, Customer, BookTransaction, BookReturn  # import
 
 
 class BookAdmin(admin.ModelAdmin):  # This creates a custom admin configuration for the Book model to control how books are displayed and edited in the admin interface
-    fields = ['book_name', 'book_author', 'genre', 'img', 'amount_of_copies']  # This specifies the fields to display in the book edit form, allowing control over the input fields
+    fields = ['book_name', 'book_author', 'genre', 'img', 'amount_of_copies', 'description']  # This specifies the fields to display in the book edit form, allowing control over the input fields
     list_display = ['book_name', 'book_author', 'genre', 'img', 'amount_of_copies']  # This defines the columns shown in the book list view, making it easier to browse books
 
 

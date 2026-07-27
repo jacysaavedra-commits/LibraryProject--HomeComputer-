@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+.book-detail-container {
+    max-width: 960px;
+    margin: 40px auto;
+    padding: 20px;
+    background: #1f1f1f;
+    border-radius: 20px;
+    color: #f1f1f1;
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.35);
+}
+
+.book-detail-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.book-detail-image {
+    flex: 1 1 300px;
+    max-width: 360px;
+    text-align: center;
+}
+
+.book-detail-image img {
+    width: 100%;
+    max-height: 520px;
+    object-fit: contain;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(247, 148, 0, 0.25);
+}
+
+.book-detail-meta {
+    flex: 1 1 360px;
+    min-width: 280px;
+}
+
+.book-detail-meta h1 {
+    margin-bottom: 16px;
+    font-size: 2.4rem;
+    color: #ffffff;
+}
+
+.book-detail-meta p {
+    line-height: 1.8;
+    margin-bottom: 16px;
+    color: #dcdcdc;
+}
+
+.book-detail-meta .meta-label {
+    font-size: 0.95rem;
+    color: #b8b8b8;
+    margin-top: 18px;
+}
+
+.book-detail-meta .meta-value {
+    font-size: 1.1rem;
+    color: #ffffff;
+    margin-top: 6px;
+}
+
+.book-detail-meta .back-link {
+    display: inline-block;
+    margin-top: 26px;
+    padding: 10px 18px;
+    background: #32174d;
+    border-radius: 999px;
+    color: #ffffff;
+    text-decoration: none;
+    transition: background 0.2s ease;
+}
+
+.book-detail-meta .back-link:hover {
+    background: #5d2c91;
+}
+</style>
+
+<div class="book-detail-container">
+    <div class="book-detail-grid">
+        <div class="book-detail-image">
+            {% if book.img %}
+                <img src="{{ book.img.url }}" alt="{{ book.book_name }}">
+            {% else %}
+                <div style="min-height:400px; border: 2px dashed #5d2c91; border-radius:20px; display:flex; align-items:center; justify-content:center; color:#aaa;">
+                    No cover image available
+                </div>
+            {% endif %}
+        </div>
+        <div class="book-detail-meta">
+            <h1>{{ book.book_name }}</h1>
+            <p><strong>Author:</strong> {{ book.book_author }}</p>
+            {% if book.genre %}
+                <p><strong>Genre:</strong> {{ book.genre.genre_name }}</p>
+            {% endif %}
+            <p><strong>Available Copies:</strong> {{ book.amount_of_copies }}</p>
+            {% if book.description %}
+                <p><strong>Description</strong></p>
+                <p>{{ book.description }}</p>
+            {% else %}
+                <p><em>No description has been added for this book yet.</em></p>
+            {% endif %}
+            <a class="back-link" href="{% url 'authors' %}">Back to featured books</a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
