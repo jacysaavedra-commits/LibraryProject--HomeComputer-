@@ -56,4 +56,9 @@ def login(request):
         except Customer.DoesNotExist:
             return render(request, 'login.html', {'error': 'Invalid username or password.'})
     return render(request, 'login.html')
+
+
+def logout(request):
+    request.session.flush()
+    return redirect('login')
        
