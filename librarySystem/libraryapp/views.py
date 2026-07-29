@@ -1,5 +1,5 @@
 from django.shortcuts import get_object_or_404, redirect, render
-from .models import Book, Customer
+from .models import Book, Customer, BookTransaction
 from django.core.exceptions import ValidationError
 
 # Create your views here.
@@ -66,4 +66,18 @@ def login(request):
 def logout(request):
     request.session.flush()
     return redirect('login')
+
+
+def profile(request):
+    customer_id = request.session.get('customer_id')
+    if not customer_id:
+        return redirect('login')
+
+    customer = get_object_or_404(Customer, student_id=customer_id)
+    book_transactions = BookTransaction.objects.filter(customer=customer).select_related('book').order_by('-issue_date')
+
+    return render(request, 'profile.html', {
+        'customer': customer,
+        'book_transactions': book_transactions,
+    })
        

@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="profile-page">
+  <div class="profile-header">
+    <div>
+      <h2>Account details</h2>
+      <p>Welcome back, {{ customer.first_name }} {{ customer.last_name }}.</p>
+    </div>
+    <div class="profile-summary">
+      <div><strong>Member ID</strong><span>{{ customer.student_id }}</span></div>
+      <div><strong>Name</strong><span>{{ customer.first_name }} {{ customer.last_name }}</span></div>
+    </div>
+  </div>
+
+  <div class="issued-books-panel">
+    <h3>Books issued</h3>
+    {% if book_transactions %}
+      <div class="issued-book-list">
+        {% for transaction in book_transactions %}
+          <div class="issued-book-item">
+            <div class="issued-book-title">{{ transaction.book.book_name }}</div>
+            <div class="issued-book-author">by {{ transaction.book.book_author }}</div>
+            <div class="issued-book-detail"><strong>Issued:</strong> {{ transaction.issue_date|date:'M d, Y' }}</div>
+            <div class="issued-book-detail"><strong>Return by:</strong> {{ transaction.return_date|date:'M d, Y' }}</div>
+            <div class="issued-book-status {% if transaction.is_issued %}active{% else %}returned{% endif %}">
+              {% if transaction.is_issued %}Currently issued{% else %}Returned{% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="no-books">You have no book issue records yet.</p>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
