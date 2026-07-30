@@ -23,6 +23,7 @@
                     <a class="profile-button" href="{% url 'profile' %}" aria-label="Account">
                         <span class="profile-initial">{{ request.session.customer_name|default:'U'|slice:":1"|upper }}</span>
                     </a>
+                    <a class="btn btn-logout" href="{% url 'logout' %}">Logout</a>
                 {% else %}
                     <a class="btn btn-login" href="{% url 'login' %}">Login</a>
                     <a class="btn btn-admin" href="/admin/">Admin</a>
