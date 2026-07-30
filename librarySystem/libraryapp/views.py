@@ -89,5 +89,7 @@ def profile(request):
         'book_transactions': book_transactions,
     })
 
+def about(request):
+    return render(request, 'about.html')
 
        
