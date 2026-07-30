@@ -21,6 +21,9 @@ def authors(request):
     books = Book.objects.all()
     return render(request, 'authors.html', {'books': books})
 
+def about(request):
+    return render(request, 'about.html')
+
 def book_detail(request, book_id):
     book = get_object_or_404(Book, book_id=book_id)
     return render(request, 'book_detail.html', {'book': book})
@@ -89,7 +92,6 @@ def profile(request):
         'book_transactions': book_transactions,
     })
 
-def about(request):
-    return render(request, 'about.html')
+
 
        
