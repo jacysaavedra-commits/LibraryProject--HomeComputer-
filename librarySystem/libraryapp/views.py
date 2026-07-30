@@ -9,6 +9,14 @@ def home(request):
 def books(request):
     return render(request, 'books.html')
 
+def book_list(request):
+    q = request.GET.get('q', '')
+    if q:
+        books = Book.objects.filter(book_name__icontains=q)
+    else:
+        books = Book.objects.all()
+    return render(request, 'books.html', {'books': books, 'query': q})
+
 def authors(request):
     books = Book.objects.all()
     return render(request, 'authors.html', {'books': books})
