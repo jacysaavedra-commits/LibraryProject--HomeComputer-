@@ -51,7 +51,7 @@ class Genre(models.Model): # Creates a model named Genre made for holding genre 
 class Book(models.Model): # Creates a model named Book made for holding book information
     
     book_id = models.AutoField(primary_key=True) # Creates an automatic gives a unique id for each book
-    book_name = models.CharField(max_length=40) # Creates a charfield for strings of text with a max character length of 40 for book names
+    book_name = models.CharField(max_length=120) # Creates a charfield for strings of text with a max character length of 40 for book names
     book_author = models.CharField(max_length=40) # Creates a charfield for strings of text with a max character length of 40 for book authors
 
     genre = models.ForeignKey(Genre, on_delete=models.CASCADE, null=True, blank=True) # Creates a Many-to-one relationship by linking to the genre model, also makes it so that if a genre were deleted it would delete all books associated with that genre and allows for the genre to have a empty value 
@@ -61,8 +61,8 @@ class Book(models.Model): # Creates a model named Book made for holding book inf
 
     def clean(self):  # Validate book field lengths before save
         errors = {}
-        if self.book_name and len(self.book_name) > 30:  # validate book name length
-            errors['book_name'] = 'Book name may not exceed 30 characters.'
+        if self.book_name and len(self.book_name) > 120:  # validate book name length
+            errors['book_name'] = 'Book name may not exceed 120 characters.'
         if self.book_author and len(self.book_author) > 30:  # validate book author length
             errors['book_author'] = 'Book author may not exceed 30 characters.'
         if self.genre is None:
